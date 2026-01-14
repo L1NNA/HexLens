@@ -1,0 +1,13 @@
+{
+  "IDAMetadataDescriptorVersion": 1,
+  "plugin" :
+  {
+    "name" : "HexLens",
+    "version" : "0.0.1",
+    "description" : "HexLens is a plugin for IDA Pro that allows you to view and edit hex values in the IDA Pro interface.",
+    "author" : "L1NNA LAB @ McGill University",
+    "categories" : ["Vulnerability Analysis", "Reverse Engineering", "Malware Analysis"],
+    "pythonDependencies" : ["openai"],
+    "entryPoint" : "hexlens_loader.py"
+  }
+}
