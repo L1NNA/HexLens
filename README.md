@@ -223,3 +223,54 @@ Boundary to privileged operations:
 6. Identified the boundary between pre-privileged setup and actual exec operations
 
 This demonstrates HexLens's ability to trace multi-hop data flow paths across the entire binary, identifying how untrusted input (argv) flows through parsing and setup functions before reaching privileged operations.
+
+### Example 3: Finding Vulnerability Chains with Multi-Hop Path Search
+
+**Query**: `Find a chain where argv length is miscomputed and later used for allocation or copy`
+
+**Agent Output**:
+```
+🔍 Analyzing: Find a chain where argv length is miscomputed and later used for allocation or copy
+
+⏱️ Planning: 9.8s, 4742 tokens (3798 prompt + 944 completion)
+
+📋 Find argv-derived length miscompute sources and connect them to alloc/copy sinks via multi-hop chain search
+  • Search: 'SRC_ARGV LEN_EXPANDS'
+    ✓ Found 12 function(s): sub_160C0, sub_1A5F0, sub_13590 and 9 more
+  • Search: 'SINK_ALLOC SINK_MEMWRITE memcpy strcpy strncpy sprintf snprintf malloc calloc realloc'
+    ✓ Found 25 function(s): sub_160C0, sub_1A5F0, sub_13590 and 22 more
+  • db.find_ls_chains
+    ✗ No chains found
+✓ Enough evidence collected
+
+📝 Generating answer...
+⏱️ Answering: 55.7s, 16249 tokens (12563 prompt + 3686 completion)
+
+📋 No confirmed miscomputed argv-length bug is visible from the evidence alone, but there are strong 
+candidate chains where argv is consumed, lengths are computed via strlen, and memory is subsequently 
+allocated or data is written. The two most promising paths to audit are: (1) sub_7B20 -> sub_1A5F0, 
+and (2) main -> sub_13590.
+
+Based on the feature summaries, multiple functions consume argv and also perform length computations 
+and/or memory allocation. The most compelling candidate is sub_1A5F0 (called from sub_7B20). It explicitly 
+lists argv as an input source, calls .strlen (0x5330), performs a memory allocation (evidence at 0x1A63C), 
+and eventually makes an exec call (execl)...
+
+🔍 Findings (3):
+1. Candidate chain A: sub_7B20 -> sub_1A5F0. sub_1A5F0 consumes argv, calls .strlen, allocates memory 
+   (0x1A63C), and ultimately calls execl.
+2. Candidate chain B: main (0x5D60) -> sub_13590. sub_13590 consumes argv, calls .strlen, allocates 
+   (0x135E5), and performs writes.
+3. Additional areas: sub_160C0 (argv + allocation at 0x16121) and sub_1B3D0 (argv + .strlen) also fit 
+   parts of the pattern.
+```
+
+**What happened**:
+1. The planner recognized this as a chain query requiring multi-hop path search
+2. Searched for argv sources with length expansion (`SRC_ARGV LEN_EXPANDS`)
+3. Searched for allocation/copy sinks (`SINK_ALLOC SINK_MEMWRITE`)
+4. Attempted to connect them using `db.find_ls_chains` (multi-hop BFS chain search)
+5. Even though no direct chains were found, the agent identified candidate patterns by analyzing features
+6. Generated a comprehensive answer with multiple candidate chains, evidence, and jump targets
+
+**Key insight**: This example shows how HexLens attempts to use BFS chain search (`db.find_ls_chains`) to connect sources and sinks, and when direct paths aren't found, it still provides valuable analysis by identifying functions that match parts of the vulnerability pattern. The agent found functions that consume argv, compute lengths (via strlen), and perform allocations/writes, which are the key components of the vulnerability pattern.
