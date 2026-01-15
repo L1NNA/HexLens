@@ -1,6 +1,6 @@
 import idaapi
 import ida_kernwin
-from hexlens import hello_plugin
+from hexlens import HexLenPlugin
 
 def PLUGIN_ENTRY():
-    return hello_plugin()
+    return HexLenPlugin()

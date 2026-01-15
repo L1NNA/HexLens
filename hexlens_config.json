@@ -1,0 +1,11 @@
+{
+  "llm_provider": "openai",
+  "openai_api_key": "",
+  "openai_model_chat": "gpt-5",
+  "openai_model_features": "gpt-4o-mini",
+  "ollama_base_url": "http://localhost:11434",
+  "ollama_model_chat": "llama3.2",
+  "ollama_model_features": "llama3.2",
+  "description": "HexLens: Multi-Function Reasoning Agent for IDA Pro. AI-powered assistant that reasons across the entire binary to answer complex security and reverse engineering queries. Builds a labeled graph database and uses a planner to traverse function chains for multi-hop analysis.",
+  "python_dependencies": ["openai", "PySide6"]
+}
